@@ -106,7 +106,8 @@ function AsciiArrayToString(arr: Buffer) {
 function findDomain(msg: string) {
   let domain_idx;
   let domain;
-  var s = Buffer.from(msg, "base64");
+  const allParts = msg.split(".");
+  var s = Buffer.from(allParts[1], "base64");
   var json = AsciiArrayToString(s);
   const email_regex = /([-a-zA-Z._+]+)@([-a-zA-Z]+).([a-zA-Z]+)/;
   const match = json.match(email_regex);
@@ -120,7 +121,8 @@ function findDomain(msg: string) {
 }
 
 function findTimestampInJSON(msg: string) {
-  var s = Buffer.from(msg, "base64");
+  const allParts = msg.split(".");
+  var s = Buffer.from(allParts[1], "base64");
   var json = AsciiArrayToString(s);
   let time_index = json.indexOf(`"exp":`) + 6;
   let timestamp = json.substring(time_index, time_index + 10);

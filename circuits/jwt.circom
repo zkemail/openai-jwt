@@ -10,7 +10,7 @@ include "./jwt_type_regex.circom";
 include "./ascii.circom";
 include "./timestamp.circom";
 
-template JWTVerify(max_msg_bytes, max_json_bytes, n, k) {
+template JWTVerify(max_msg_bytes, max_body_bytes,max_json_bytes, n, k) {
     signal input message[max_msg_bytes];
     signal input modulus[k]; // rsa pubkey
     signal input signature[k];
@@ -66,21 +66,11 @@ template JWTVerify(max_msg_bytes, max_json_bytes, n, k) {
 
     // decode to JSON format
     component message_b64 = Base64Decode(max_json_bytes);
-    component eqs[max_msg_bytes];
-    signal int[max_msg_bytes];
+    signal body[max_body_bytes] <== VarShiftLeft(max_msg_bytes, max_body_bytes)(message, period_idx + 1);
 
-    for (var i = 0; i < max_msg_bytes - 1; i++) {
-        eqs[i] = GreaterEqThan(15);
-        eqs[i].in[0] <== i;
-        eqs[i].in[1] <== period_idx;
-
-        var i_plus_one = eqs[i].out;
-        var i_normal = 1 - eqs[i].out;
-
-        int[i] <== (message[i] * i_normal);
-        message_b64.in[i] <== (message[i + 1] * (i_plus_one)) + int[i];
+    for (var i = 0; i < max_body_bytes; i++) {
+        message_b64.in[i] <== body[i];
     }
-    message_b64.in[max_msg_bytes - 1] <== 0;
 
     /************************** JWT REGEXES *****************************/
 
@@ -142,4 +132,4 @@ template JWTVerify(max_msg_bytes, max_json_bytes, n, k) {
     less_exp_time.out === 1;
 }
 
-component main { public [ modulus, time ] } = JWTVerify(1024, 766, 121, 17);
+component main { public [ modulus, time ] } = JWTVerify(1024, 900, 673, 121, 17);
