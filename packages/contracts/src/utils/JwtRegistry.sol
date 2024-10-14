@@ -46,7 +46,7 @@ contract JwtRegistry is IDKIMRegistry, Ownable {
     function setDKIMPublicKeyHash(
         string memory domainName,
         bytes32 publicKeyHash
-    ) public {
+    ) public onlyOwner {
         require(bytes(domainName).length != 0, "Invalid domain name");
         require(publicKeyHash != bytes32(0), "Invalid public key hash");
         string[] memory parts = this.stringToArray(domainName);
@@ -72,7 +72,7 @@ contract JwtRegistry is IDKIMRegistry, Ownable {
     function revokeDKIMPublicKeyHash(
         string memory domainName,
         bytes32 publicKeyHash
-    ) public {
+    ) public onlyOwner {
         require(bytes(domainName).length != 0, "Invalid domain name");
         require(publicKeyHash != bytes32(0), "Invalid public key hash");
         require(

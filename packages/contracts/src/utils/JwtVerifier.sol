@@ -42,6 +42,7 @@ contract JwtVerifier is IVerifier, OwnableUpgradeable, UUPSUpgradeable {
 
         uint256[ISS_FIELDS + COMMAND_FIELDS + AZP_FIELDS + 6] memory pubSignals;
         
+        // Split a string consisting of kid|iss|azp concatenated in domainName by stringToArray with | as delimiter
         // string[] = [kid, iss, azp]
         string[] memory parts = this.stringToArray(proof.domainName);
         
@@ -131,6 +132,11 @@ contract JwtVerifier is IVerifier, OwnableUpgradeable, UUPSUpgradeable {
         return COMMAND_BYTES;
     }
 
+    /// @notice Converts a string containing three parts separated by '|' into an array of strings
+    /// @param _strings The input string to be split
+    /// @return An array of three strings, representing kid, iss, and azp
+    /// @dev This function is used to parse the domainName parameter in other functions
+    /// @dev Requires the input string to contain exactly two '|' characters
     function stringToArray(string memory _strings) external pure returns (string[] memory) {
         strings.slice memory slicee = _strings.toSlice();
         strings.slice memory delim = "|".toSlice();
