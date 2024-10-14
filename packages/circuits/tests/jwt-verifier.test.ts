@@ -26,7 +26,7 @@ describe("JWT Verifier Circuit", () => {
         circuit = await wasm_tester(
             path.join(__dirname, "./test-circuits/jwt-verifier-test.circom"),
             {
-                recompile: true,
+                recompile: false,
                 include: path.join(__dirname, "../../../node_modules"),
                 output: path.join(__dirname, "./compiled-test-circuits"),
             }
@@ -460,7 +460,7 @@ describe("JWT Verifier Circuit", () => {
     });
 
     // @Note - Needs an actual Google Sign-In JWT to run
-    it.skip("Verify a real Google Sign-In JWT", async () => {
+    it("Verify a real Google Sign-In JWT", async () => {
         const googleSignInData = JSON.parse(
             fs.readFileSync(
                 path.join(__dirname, "test-jwts/google-sign-in.json"),
@@ -502,6 +502,7 @@ describe("JWT Verifier Circuit", () => {
         for (let i = 0; i < issuerFields.length; i++) {
             expect(BigInt(issuerFields[i])).toEqual(witness[1 + 1 + i]);
         }
+        console.log("iss length", issuerFields.length);
 
         // publicKeyHash
         const expectedPubKeyHash = relayerUtils.publicKeyHash(
@@ -534,6 +535,7 @@ describe("JWT Verifier Circuit", () => {
                 witness[1 + 1 + issuerFields.length + 3 + i]
             );
         }
+        console.log("maskedCommand length", maskedCommandFields.length);
 
         // accountSalt
         const accountSalt = relayerUtils.accountSalt(
@@ -562,6 +564,7 @@ describe("JWT Verifier Circuit", () => {
                 ]
             );
         }
+        console.log("azp length", azpFields.length);
 
         // isCodeExist (should be 0 as there's no invitation code in this JWT)
         expect(0n).toEqual(

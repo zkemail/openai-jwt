@@ -6,24 +6,31 @@ export default async function handler(
     req: NextApiRequest,
     res: NextApiResponse
 ) {
-    if (req.method === "POST") {
-        try {
-            const { jwt, publicKey, maxMessageLength } = req.body;
-            const accountCode = await genAccountCode();
-            const inputs = await generateJWTVerifierInputs(
-                jwt,
-                publicKey,
-                BigInt(accountCode),
-                {
-                    maxMessageLength: maxMessageLength,
-                }
-            );
-            res.status(200).json(inputs);
-        } catch (error) {
-            res.status(500).json({ error: "Failed to generate inputs" });
-        }
-    } else {
+    if (req.method !== "POST") {
         res.setHeader("Allow", ["POST"]);
-        res.status(405).end(`Method ${req.method} Not Allowed`);
+        return res.status(405).end(`Method ${req.method} Not Allowed`);
+    }
+
+    try {
+        const { jwt, pubkey, maxMessageLength } = req.body;
+
+        if (!jwt || !pubkey || !maxMessageLength) {
+            return res.status(400).json({ error: "Missing required fields" });
+        }
+
+        const accountCode = await genAccountCode();
+        const circuitInputs = await generateJWTVerifierInputs(
+            jwt,
+            pubkey,
+            accountCode,
+            {
+                maxMessageLength,
+            }
+        );
+
+        res.status(200).json(circuitInputs);
+    } catch (error) {
+        console.error("Error generating circuit inputs:", error);
+        res.status(500).json({ error: "Failed to generate inputs" });
     }
 }

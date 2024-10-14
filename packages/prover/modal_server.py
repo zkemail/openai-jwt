@@ -5,7 +5,7 @@ from google.cloud.logging.handlers import CloudLoggingHandler
 from google.cloud.logging_v2.handlers import setup_logging
 from google.oauth2 import service_account
 
-app = modal.App("jwt-prover-v0.1.0")
+app = modal.App("jwt-prover-v0.1.4")
 
 image = modal.Image.from_dockerfile("Dockerfile")
 
@@ -15,7 +15,7 @@ image = modal.Image.from_dockerfile("Dockerfile")
     mounts=[
         modal.Mount.from_local_python_packages("core"),
     ],
-    cpu=1,
+    cpu=16,
     secrets=[modal.Secret.from_name("gc-ether-email-auth-prover")],
 )
 @modal.wsgi_app()
