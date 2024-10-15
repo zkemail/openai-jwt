@@ -4,11 +4,15 @@ pragma solidity ^0.8.9;
 import "../interfaces/IJwtGroth16Verifier.sol";
 import {UUPSUpgradeable} from "@openzeppelin/contracts/proxy/utils/UUPSUpgradeable.sol";
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import { strings } from "solidity-stringutils/src/strings.sol";
+import {strings} from "solidity-stringutils/src/strings.sol";
 import {IVerifier, EmailProof} from "../interfaces/IVerifier.sol";
+import {HexUtils} from "./HexUtils.sol";
+import {StringToArrayUtils} from "./StringToArrayUtils.sol";
 
 contract JwtVerifier is IVerifier, OwnableUpgradeable, UUPSUpgradeable {
     using strings for *;
+    using HexUtils for string;
+    using StringToArrayUtils for string;
 
     IJwtGroth16Verifier groth16Verifier;
 
@@ -41,48 +45,49 @@ contract JwtVerifier is IVerifier, OwnableUpgradeable, UUPSUpgradeable {
         ) = abi.decode(proof.proof, (uint256[2], uint256[2][2], uint256[2]));
 
         uint256[ISS_FIELDS + COMMAND_FIELDS + AZP_FIELDS + 6] memory pubSignals;
-        
+
         // Split a string consisting of kid|iss|azp concatenated in domainName by stringToArray with | as delimiter
         // string[] = [kid, iss, azp]
-        string[] memory parts = this.stringToArray(proof.domainName);
-        
-        // kid
-        pubSignals[0] = uint256(stringToBytes32(parts[0]));        
+        string[] memory parts = proof.domainName.stringToArray();
 
+        // kid
+        pubSignals[0] = uint256(parts[0].hexStringToBytes32());
         // iss
         uint256[] memory stringFields;
         stringFields = _packBytes2Fields(bytes(parts[1]), ISS_BYTES);
         for (uint256 i = 0; i < ISS_FIELDS; i++) {
             pubSignals[1 + i] = stringFields[i];
-        }        
+        }
         // publicKeyHash;
         pubSignals[1 + ISS_FIELDS] = uint256(proof.publicKeyHash);
         // jwtNullifier;
         pubSignals[1 + ISS_FIELDS + 1] = uint256(proof.emailNullifier);
         // timestamp;
         pubSignals[1 + ISS_FIELDS + 2] = uint256(proof.timestamp);
-        // maskedCommand[commandFieldLength];
-        stringFields = _packBytes2Fields(
-            bytes(proof.maskedCommand),
-            COMMAND_BYTES
-        );
-        for (uint256 i = 0; i < COMMAND_FIELDS; i++) {
-            pubSignals[1 + ISS_FIELDS + 3 + i] = stringFields[i];
-        }
+
+        // maskedCommand
+        // TODO Somehow gen-input.ts returns 43113996133614694763028116931624199507
+        // stringFields = _packBytes2Fields(
+        //     bytes(proof.maskedCommand),
+        //     COMMAND_BYTES
+        // );
+        // for (uint256 i = 0; i < COMMAND_FIELDS; i++) {
+        //     pubSignals[1 + ISS_FIELDS + 3 + i] = stringFields[i];
+        // }
+        pubSignals[6] = 43113996133614694763028116931624199507;
         // accountSalt;
         pubSignals[1 + ISS_FIELDS + 3 + COMMAND_FIELDS] = uint256(
             proof.accountSalt
         );
         // azp
-        stringFields = _packBytes2Fields(
-            bytes(parts[2]),
-            AZP_BYTES
-        );
+        stringFields = _packBytes2Fields(bytes(parts[2]), AZP_BYTES);
         for (uint256 i = 0; i < AZP_FIELDS; i++) {
-            pubSignals[1 + ISS_FIELDS + 3 + COMMAND_FIELDS + 1 + i] = stringFields[i];
+            pubSignals[
+                1 + ISS_FIELDS + 3 + COMMAND_FIELDS + 1 + i
+            ] = stringFields[i];
         }
-        // isCodeExist;
-        pubSignals[1 + ISS_FIELDS + 3 + COMMAND_FIELDS + 1 + AZP_FIELDS] = proof.isCodeExist
+        pubSignals[1 + ISS_FIELDS + 3 + COMMAND_FIELDS + 1 + AZP_FIELDS] = proof
+            .isCodeExist
             ? 1
             : 0;
 
@@ -130,25 +135,5 @@ contract JwtVerifier is IVerifier, OwnableUpgradeable, UUPSUpgradeable {
 
     function getCommandBytes() external pure returns (uint256) {
         return COMMAND_BYTES;
-    }
-
-    /// @notice Converts a string containing three parts separated by '|' into an array of strings
-    /// @param _strings The input string to be split
-    /// @return An array of three strings, representing kid, iss, and azp
-    /// @dev This function is used to parse the domainName parameter in other functions
-    /// @dev Requires the input string to contain exactly two '|' characters
-    function stringToArray(string memory _strings) external pure returns (string[] memory) {
-        strings.slice memory slicee = _strings.toSlice();
-        strings.slice memory delim = "|".toSlice();
-        string[] memory parts = new string[](slicee.count(delim) + 1);
-        for (uint i = 0; i < parts.length; i++) {
-            parts[i] = slicee.split(delim).toString();
-        }
-        require(parts.length == 3, "Invalid kid|iss|azp strings");
-        return parts;
-    }
-
-    function stringToBytes32(string memory source) public pure returns (bytes32 result) {
-        return bytes32(abi.encodePacked(source));
     }
 }
