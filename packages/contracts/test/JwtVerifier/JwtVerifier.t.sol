@@ -65,7 +65,7 @@ contract JwtVerifierTest_verifyEmailProof is Test {
         // timestamp -> pubSignals[5]
         uint timeStamp = vm.parseUint(pubSignals[5]);
         // maskedCommand -> pubSignals[6] - pubSignals[25]
-        string memory maskedCommand = "Send 0.1 ETH to alice@gmail.com";
+        string memory maskedCommand = "Send 0.12 ETH to 0x1234";
         // accountSalt -> pubSignals[26]
         bytes32 accountSalt = bytes32(vm.parseUint(pubSignals[26]));
         // azp -> pubSignals[27] - pubSignals[29]

@@ -66,15 +66,13 @@ contract JwtVerifier is IVerifier, OwnableUpgradeable, UUPSUpgradeable {
         pubSignals[1 + ISS_FIELDS + 2] = uint256(proof.timestamp);
 
         // maskedCommand
-        // TODO Somehow gen-input.ts returns 43113996133614694763028116931624199507
-        // stringFields = _packBytes2Fields(
-        //     bytes(proof.maskedCommand),
-        //     COMMAND_BYTES
-        // );
-        // for (uint256 i = 0; i < COMMAND_FIELDS; i++) {
-        //     pubSignals[1 + ISS_FIELDS + 3 + i] = stringFields[i];
-        // }
-        pubSignals[6] = 43113996133614694763028116931624199507;
+        stringFields = _packBytes2Fields(
+            bytes(proof.maskedCommand),
+            COMMAND_BYTES
+        );
+        for (uint256 i = 0; i < COMMAND_FIELDS; i++) {
+            pubSignals[1 + ISS_FIELDS + 3 + i] = stringFields[i];
+        }
         // accountSalt;
         pubSignals[1 + ISS_FIELDS + 3 + COMMAND_FIELDS] = uint256(
             proof.accountSalt

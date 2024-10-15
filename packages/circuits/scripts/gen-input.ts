@@ -58,7 +58,7 @@ async function main() {
 
   const { rawJWT, publicKey } = generateJWT(header, {
     ...payload,
-    nonce: "Send 0.1 ETH to alice@gmail.com",
+    nonce: "Send 0.12 ETH to 0x1234",
   });
 
   const jwtVerifierInputs = await generateJWTVerifierInputs(
@@ -104,7 +104,7 @@ async function main() {
     const fileContent = fs.readFileSync(options.inputFile as string, 'utf-8');
     const jsonData = JSON.parse(fileContent);
     const payload = JSON.stringify({ input: jsonData });
-    const urlObject = new URL("https://zkemail--jwt-prover-v0-1-4-flask-app.modal.run/prove/jwt");
+    const urlObject = new URL("https://zkemail--jwt-prover-v0-1-0-flask-app.modal.run/prove/jwt");
     const reqOptions = {
       hostname: urlObject.hostname,
       path: urlObject.pathname,
